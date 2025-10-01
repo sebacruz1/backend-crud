@@ -2,7 +2,7 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import "dotenv/config";
 
-import { ping } from "./db";
+import { ping, pool } from "./db";
 import personaRouter from "./routes/persona";
 import empresaRouter from "./routes/empresa";
 
@@ -42,10 +42,17 @@ const server = app.listen(PORT, () => {
   console.log(` API escuchando en http://localhost:${PORT}`);
 });
 
-process.on("SIGINT", () => {
-  console.log("\nApagando servidor...");
-  server.close(() => {
-    console.log("Servidor cerrado. ¡Chao!");
-    process.exit(0);
+process.on("SIGINT", async () => {
+  console.log("\n⏹️  Apagando servidor...");
+  server.close(async () => {
+    try {
+      await pool.end();
+      console.log("Conexiones MySQL cerradas.");
+    } catch (e) {
+      console.error("Error cerrando pool:", e);
+    } finally {
+      console.log("Servidor cerrado. ¡Chao!");
+      process.exit(0);
+    }
   });
 });
