@@ -121,6 +121,30 @@ router.put("/:id", async (req, res, next) => {
     next(e);
   }
 });
+router.get("/:id/empresas", async (req, res, next) => {
+  try {
+    const actual = req.query.actual as string | undefined; // "true" | "false"
+    const whereExtra = actual === "true" ? "AND pe.es_actual = 1"
+                       : actual === "false" ? "AND pe.es_actual = 0" : "";
+    const limit = Math.min(parseInt(String(req.query.limit ?? "20")), 100);
+    const offset = Math.max(parseInt(String(req.query.offset ?? "0")), 0);
+
+    const [rows] = await pool.query(
+      `SELECT
+         BIN_TO_UUID(pe.id,1) AS relacion_id,
+         BIN_TO_UUID(e.id,1)  AS empresa_id,
+         e.nombre AS empresa, pe.cargo, pe.area,
+         pe.fecha_inicio, pe.fecha_fin, pe.es_actual
+       FROM persona_empresa pe
+       JOIN empresa e ON e.id = pe.empresa_id
+       WHERE pe.persona_id = UUID_TO_BIN(?,1) ${whereExtra}
+       ORDER BY pe.es_actual DESC, pe.fecha_inicio DESC
+       LIMIT ? OFFSET ?`,
+      [req.params.id, limit, offset]
+    );
+    res.json({ data: rows, limit, offset });
+  } catch (e) { next(e); }
+});
 
 router.delete("/:id", async (req, res, next) => {
   try {
