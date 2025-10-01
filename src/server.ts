@@ -4,6 +4,7 @@ import "dotenv/config";
 
 import { ping } from "./db";
 import personaRouter from "./routes/persona";
+import empresaRouter from "./routes/empresa";
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.get("/health", async (_req: Request, res: Response) => {
 });
 
 app.use("/api/persona", personaRouter);
+app.use("/api/empresa", empresaRouter);
 
 app.use((req: Request, res: Response) => {
   res.status(404).json({ error: `Ruta no encontrada: ${req.method} ${req.path}` });
