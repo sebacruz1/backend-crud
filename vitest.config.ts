@@ -7,5 +7,11 @@ export default defineConfig({
     include: ["tests/**/*.test.ts"],
     hookTimeout: 30000,
     testTimeout: 30000,
+    reporters: ["default"],
+    coverage: {
+      provider: "v8",
+      reportsDirectory: "./coverage",
+      reporter: ["text", "lcov"],
+    },
   },
 });
