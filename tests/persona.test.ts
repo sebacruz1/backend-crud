@@ -24,9 +24,9 @@ it("POST /api/persona -> crea", async () => {
 
   };
   const res = await request(app).post("/api/persona/").send(payload);
-  expect(res.statust).toBe(201);
+  expect(res.status).toBe(201);
   expect(res.body).toHaveProperty("id");
-  createdId = req.body.id;
+  createdId = res.body.id;
 });
 
 it("GET /api/persona/:id -> obtiene creada", async () => {
@@ -45,11 +45,11 @@ it("GET /api/persona/:id -> actualiza", async () => {
 });
 
 it("DELETE /api/persona/:id -> elimina", async () => {
-  const res = await request(app).delete(`/api/persona/$(createdId)`);
+  const res = await request(app).delete(`/api/persona/${createdId}`);
   expect(res.status).toBe(204);
 });
 
 it("GET /api/persona/:id (eliminado) -> 404", async () => {
-  const res = await request(app).get(`/api/persona/$(createdId)`);
+  const res = await request(app).get(`/api/persona/${createdId}`);
   expect(res.status).toBe(404);
 });
