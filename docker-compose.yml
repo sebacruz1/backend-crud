@@ -39,10 +39,6 @@ services:
       DATABASE_URL: ${DATABASE_URL:-mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}}
     ports:
       - "${PORT:-3000}:3000"
-    # Si quieres hot-reload en dev, monta el código (comenta en prod)
-    # volumes:
-    #   - .:/app
-    #   - /app/node_modules
     command: ["node", "dist/server.js"]
 
 volumes:
