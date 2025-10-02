@@ -8,7 +8,7 @@ afterAll(async () => {
   await pool.end();
 });
 
-it("GET /api/persona -> lista" async () => {
+it("GET /api/persona -> lista", async () => {
   const res = await request(app).get("/api/persona");
   expect(res.status).toBe(200);
   expect(Array.isArray(res.body)).toBe(true);
@@ -39,7 +39,7 @@ it("GET /api/persona/:id -> obtiene creada", async () => {
 it("GET /api/persona/:id -> actualiza", async () => {
   const res = await request(app).put(`/api/persona/${createdId}`).send({
     direccion: "Santiago",
-  )};
+  });
   expect(res.status).toBe(200);
   expect(res.body).toHaveProperty("direccion", "Santiago");
 });
