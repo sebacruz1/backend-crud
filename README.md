@@ -27,6 +27,7 @@ El proyecto incluye validaciones con **Zod**, tests automáticos con **Vitest + 
 
 ---
 ## Estructura del proyecto backend-crud
+```bash
 backend-crud/
 ├── src/
 │   ├── app.ts               # Configuración principal de Express
@@ -55,6 +56,7 @@ backend-crud/
 ├── tsconfig.json
 ├── eslint.config.mjs
 └── package.json
+```
 ---
 
 ## Configuración del entorno
