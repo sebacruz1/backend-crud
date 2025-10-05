@@ -26,7 +26,6 @@ jobs:
           --health-retries=30
 
     env:
-      # apunta tu backend de pruebas a la DB del job
       DATABASE_URL: mysql://root:root@127.0.0.1:3306/crud_test
       NODE_ENV: test
 
@@ -66,5 +65,5 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Test
+      - name: Tests
         run: npm test
