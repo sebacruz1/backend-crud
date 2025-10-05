@@ -1,9 +1,9 @@
 import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
-import { ping } from "./db.ts";
-import personaRouter from "./routes/persona.ts";
-import empresaRouter from "./routes/empresa.ts";
-import personaEmpresaRouter from "./routes/persona-empresa.ts";
+import { ping } from "./db";
+import personaRouter from "./routes/persona";
+import empresaRouter from "./routes/empresa";
+import personaEmpresaRouter from "./routes/persona-empresa";
 
 export const app = express();
 

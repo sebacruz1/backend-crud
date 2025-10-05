@@ -140,4 +140,37 @@ router.delete("/:id", async (req: Request<{ id: string }>, res: Response, next: 
   } catch (e) { next(e); }
 });
 
+router.get("/:id/empresas", async (req, res, next) => {
+  try {
+    const personaId = req.params.id;
+
+    const actual = typeof req.query.actual === "string" ? req.query.actual : undefined;
+    const whereExtra =
+      actual === "true"  ? "AND pe.es_actual = 1" :
+      actual === "false" ? "AND pe.es_actual = 0" : "";
+
+    const limit  = Math.min(parseInt(String(req.query.limit  ?? "20"), 10), 100);
+    const offset = Math.max(parseInt(String(req.query.offset ?? "0"), 10), 0);
+
+    const sql = `
+      SELECT
+        BIN_TO_UUID(pe.id,1)   AS relacion_id,
+        BIN_TO_UUID(e.id,1)    AS empresa_id,
+        e.nombre               AS empresa,
+        pe.cargo, pe.area,
+        pe.fecha_inicio, pe.fecha_fin, pe.es_actual
+      FROM persona_empresa pe
+      JOIN empresa e ON e.id = pe.empresa_id
+      WHERE pe.persona_id = UUID_TO_BIN(?,1)
+        ${whereExtra}
+      ORDER BY pe.es_actual DESC, pe.fecha_inicio DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+
+    const [rows] = await pool.execute(sql, [personaId]);
+    res.json({ data: rows, limit, offset });
+  } catch (e) {
+    next(e);
+  }
+});
 export default router;
