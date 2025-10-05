@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { pool } from "../db";
 import { z } from "zod";
+import { normalizarRut } from "../utils/rut";
 
 const router = Router();
 
@@ -47,6 +48,7 @@ router.get("/:id", async (req, res, next) => {
 router.post("/", async (req, res, next) => {
   try {
     const data = personaCrear.parse(req.body);
+    data.rut = normalizarRut(data.rut);
     await pool.query(
       `INSERT INTO persona (nombre, apellidos, rut, direccion, celular, email, fecha_nacimiento)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -82,6 +84,7 @@ router.post("/", async (req, res, next) => {
 router.put("/:id", async (req, res, next) => {
   try {
     const data = personaActualizar.parse(req.body);
+    data.rut = normalizarRut(data.rut);
     const [result]: any = await pool.query(
       `UPDATE persona SET
          nombre = COALESCE(?, nombre),
@@ -121,9 +124,10 @@ router.put("/:id", async (req, res, next) => {
     next(e);
   }
 });
+
 router.get("/:id/empresas", async (req, res, next) => {
   try {
-    const actual = req.query.actual as string | undefined; // "true" | "false"
+    const actual = req.query.actual as string | undefined;
     const whereExtra = actual === "true" ? "AND pe.es_actual = 1"
                        : actual === "false" ? "AND pe.es_actual = 0" : "";
     const limit = Math.min(parseInt(String(req.query.limit ?? "20")), 100);
