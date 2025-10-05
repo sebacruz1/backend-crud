@@ -23,16 +23,16 @@ it("Crea persona con una empresa actual y una pasada", async () => {
   const p = await request(app).post("/api/persona").send({
     nombre: "Gothen",
     apellidos: "Cruz",
-    rut: `1234567${String(u).slice(-1)}-8`,
+    rut: `90324237-1`,
     fecha_nacimiento: "2015-04-03",
-    email: `gothen.${u}@example.com`,
+    email: `gothen@example.com`,
   });
   expect(p.status, JSON.stringify(p.body)).toBe(201);
   personaId = p.body.id;
 
   const e1 = await request(app).post("/api/empresa").send({
     nombre: `Tech1`,
-    rut: `78456123${String(u).slice(-1)}-5`,
+    rut: `78456123-0`,
     direccion: "Las Condes",
     email: `contacto${u}@tech1.cl`,
   });
@@ -41,7 +41,7 @@ it("Crea persona con una empresa actual y una pasada", async () => {
 
   const e2 = await request(app).post("/api/empresa").send({
     nombre: "InnovaCorp1",
-    rut: `7965432${String(u).slice(-1)}-8`,
+    rut: `79654321-2`,
     direccion: "Ñuñoa",
     email: `info${u}@innovacorp1.cl`,
   });
