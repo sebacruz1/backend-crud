@@ -1,7 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { pool } from "../db";
 import { z } from "zod";
-import { normalizarRut } from "../utils/rut";
 
 const router = Router();
 
@@ -14,13 +13,14 @@ const personaCrear = z.object({
   email: z.string().email().optional(),
   fecha_nacimiento: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
+
 const personaActualizar = personaCrear.partial();
 
 const isDup = (e: any) => e?.code === "ER_DUP_ENTRY" || e?.errno === 1062;
 
 router.get("/", async (_req: Request, res: Response, next: NextFunction) => {
   try {
-    const [rows] = await pool.query(
+    const [rows] = await pool.execute(
       `SELECT BIN_TO_UUID(id,1) AS id, nombre, apellidos, rut, direccion, celular, email,
               fecha_nacimiento, fecha_creacion, actualizacion
        FROM persona
@@ -30,9 +30,9 @@ router.get("/", async (_req: Request, res: Response, next: NextFunction) => {
   } catch (e) { next(e); }
 });
 
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
   try {
-    const [rows] = await pool.query(
+    const [rows] = await pool.execute(
       `SELECT BIN_TO_UUID(id,1) AS id, nombre, apellidos, rut, direccion, celular, email,
               fecha_nacimiento, fecha_creacion, actualizacion
        FROM persona
@@ -45,11 +45,11 @@ router.get("/:id", async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = personaCrear.parse(req.body);
-    data.rut = normalizarRut(data.rut);
-    await pool.query(
+
+    await pool.execute(
       `INSERT INTO persona (nombre, apellidos, rut, direccion, celular, email, fecha_nacimiento)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -63,7 +63,7 @@ router.post("/", async (req, res, next) => {
       ]
     );
 
-    const [rows] = await pool.query(
+    const [rows] = await pool.execute(
       `SELECT BIN_TO_UUID(id,1) AS id, nombre, apellidos, rut, direccion, celular, email,
               fecha_nacimiento, fecha_creacion, actualizacion
        FROM persona
@@ -81,11 +81,11 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.put("/:id", async (req, res, next) => {
+router.put("/:id", async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
   try {
     const data = personaActualizar.parse(req.body);
-    data.rut = normalizarRut(data.rut);
-    const [result]: any = await pool.query(
+
+    const [result]: any = await pool.execute(
       `UPDATE persona SET
          nombre = COALESCE(?, nombre),
          apellidos = COALESCE(?, apellidos),
@@ -106,9 +106,11 @@ router.put("/:id", async (req, res, next) => {
         req.params.id,
       ]
     );
-    if (!result || result.affectedRows === 0) return res.status(404).json({ error: "No encontrado" });
 
-    const [rows] = await pool.query(
+    if (!result || result.affectedRows === 0)
+      return res.status(404).json({ error: "No encontrado" });
+
+    const [rows] = await pool.execute(
       `SELECT BIN_TO_UUID(id,1) AS id, nombre, apellidos, rut, direccion, celular, email,
               fecha_nacimiento, fecha_creacion, actualizacion
        FROM persona
@@ -125,38 +127,15 @@ router.put("/:id", async (req, res, next) => {
   }
 });
 
-router.get("/:id/empresas", async (req, res, next) => {
+router.delete("/:id", async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
   try {
-    const actual = req.query.actual as string | undefined;
-    const whereExtra = actual === "true" ? "AND pe.es_actual = 1"
-                       : actual === "false" ? "AND pe.es_actual = 0" : "";
-    const limit = Math.min(parseInt(String(req.query.limit ?? "20")), 100);
-    const offset = Math.max(parseInt(String(req.query.offset ?? "0")), 0);
-
-    const [rows] = await pool.query(
-      `SELECT
-         BIN_TO_UUID(pe.id,1) AS relacion_id,
-         BIN_TO_UUID(e.id,1)  AS empresa_id,
-         e.nombre AS empresa, pe.cargo, pe.area,
-         pe.fecha_inicio, pe.fecha_fin, pe.es_actual
-       FROM persona_empresa pe
-       JOIN empresa e ON e.id = pe.empresa_id
-       WHERE pe.persona_id = UUID_TO_BIN(?,1) ${whereExtra}
-       ORDER BY pe.es_actual DESC, pe.fecha_inicio DESC
-       LIMIT ? OFFSET ?`,
-      [req.params.id, limit, offset]
-    );
-    res.json({ data: rows, limit, offset });
-  } catch (e) { next(e); }
-});
-
-router.delete("/:id", async (req, res, next) => {
-  try {
-    const [result]: any = await pool.query(
+    const [result]: any = await pool.execute(
       `DELETE FROM persona WHERE id = UUID_TO_BIN(?,1)`,
       [req.params.id]
     );
-    if (!result || result.affectedRows === 0) return res.status(404).json({ error: "No encontrado" });
+    if (!result || result.affectedRows === 0)
+      return res.status(404).json({ error: "No encontrado" });
+
     res.status(204).end();
   } catch (e) { next(e); }
 });
