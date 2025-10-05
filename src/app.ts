@@ -1,10 +1,9 @@
-// src/app.ts
 import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
-import { ping } from "./db.js"; // o "./db" si usas CJS
-import personaRouter from "./routes/persona.js";
-import empresaRouter from "./routes/empresa.js";
-import personaEmpresaRouter from "./routes/persona-empresa.js";
+import { ping } from "./db.ts";
+import personaRouter from "./routes/persona.ts";
+import empresaRouter from "./routes/empresa.ts";
+import personaEmpresaRouter from "./routes/persona-empresa.ts";
 
 export const app = express();
 
