@@ -4,7 +4,7 @@
 ![Express](https://img.shields.io/badge/Framework-Express.js-000000.svg?logo=express)
 ![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)
 ![MySQL](https://img.shields.io/badge/Database-MySQL-4479A1.svg?logo=mysql)
-![Build](https://github.com/sebacruz1/backend-crud/.github/workflows/ci.yml/badge.svg)
+![Build](https://github.com/sebacruz1/backend-crud/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 API RESTful para la gestión de **personas**, **empresas** y sus **relaciones laborales**, construida con **Node.js**, **Express**, **TypeScript**, y **MySQL**.
