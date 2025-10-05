@@ -18,34 +18,35 @@ afterAll(async () => {
 });
 
 it("Crea persona con una empresa actual y una pasada", async () => {
+  const u = Date.now();
+
   const p = await request(app).post("/api/persona").send({
     nombre: "Gothen",
-    apellido: "Cruz",
-    rut: "1234567-8",
+    apellidos: "Cruz",
+    rut: `1234567${String(u).slice(-1)}-8`,
     fecha_nacimiento: "2015-04-03",
-    email: "gothen.test@example.com",
+    email: `gothen.${u}@example.com`,
   });
-  expect(p.status).toBe(201);
+  expect(p.status, JSON.stringify(p.body)).toBe(201);
   personaId = p.body.id;
 
   const e1 = await request(app).post("/api/empresa").send({
     nombre: `Tech1`,
-    rut: `784561231-5`,
+    rut: `78456123${String(u).slice(-1)}-5`,
     direccion: "Las Condes",
-    email: `contacto@tech1.cl`,
+    email: `contacto${u}@tech1.cl`,
   });
-  expect(e1.status).toBe(201);
+  expect(e1.status, JSON.stringify(e1.body)).toBe(201);
   empresaActualId = e1.body.id;
 
   const e2 = await request(app).post("/api/empresa").send({
     nombre: "InnovaCorp1",
-    rut: '7965432$-8',
+    rut: `7965432${String(u).slice(-1)}-8`,
     direccion: "Ñuñoa",
-    email: 'info@innovacorp1.cl',
+    email: `info${u}@innovacorp1.cl`,
   });
-  expect(e2.status).toBe(201);
+  expect(e2.status, JSON.stringify(e2.body)).toBe(201);
   empresaPasadaId = e2.body.id;
-
 });
 
 it("POST /api/persona-empresa -> Crea relacion actual", async () => {
@@ -57,8 +58,8 @@ it("POST /api/persona-empresa -> Crea relacion actual", async () => {
     fecha_inicio: "2024-06-01",
     es_actual: true,
   });
-  expect(r.status).toBe(201);
-  expect(r.body).toHaveProperty("id")
+  expect(r.status, JSON.stringify(r.body)).toBe(201);
+  expect(r.body).toHaveProperty("id");
   expect(r.body.es_actual === 1 || r.body.es_actual === true).toBe(true);
   expect(r.body.fecha_fin).toBe(null);
   relacionActualId = r.body.id;
@@ -74,10 +75,10 @@ it("POST /api/persona-empresa -> Crea relacion pasada", async () => {
     fecha_fin: "2009-02-02",
     es_actual: false,
   });
-  expect(r.status).toBe(201);
-  expect(r.body).toHaveProperty("id")
+  expect(r.status, JSON.stringify(r.body)).toBe(201);
+  expect(r.body).toHaveProperty("id");
   expect(r.body.es_actual === 0 || r.body.es_actual === false).toBe(true);
-  expect(r.body.fecha_fin).toBe(null);
+  expect(r.body.fecha_fin).not.toBe(null);
   relacionPasadaId = r.body.id;
 });
 
