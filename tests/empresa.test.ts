@@ -33,6 +33,15 @@ it("GET /api/empresa?orderBy=nombre&dir=ASC -> ordena correctamente", async () =
   expect(nombres).toEqual(sorted);
 });
 
+it("GET /api/empresa?limit=2&offset=1 -> aplica paginación", async () => {
+  const res = await request(app).get("/api/empresa?limit=2&offset=1");
+
+  expect(res.status).toBe(200);
+  expect(res.body.data.length).toBeLessThanOrEqual(2);
+  expect(res.body.pagination.limit).toBe(2);
+  expect(res.body.pagination.offset).toBe(1);
+});
+
 it("POST /api/empresa -> crea", async () => {
   const payload = {
     nombre: "Empresa Test",
