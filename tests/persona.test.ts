@@ -13,10 +13,12 @@ afterAll(async () => {
   await pool.end();
 });
 
-it("GET /api/persona -> lista", async () => {
+it("GET /api/persona -> lista paginada", async () => {
   const res = await request(app).get("/api/persona");
   expect(res.status).toBe(200);
-  expect(Array.isArray(res.body)).toBe(true);
+  expect(Array.isArray(res.body.data)).toBe(true);
+  expect(res.body).toHaveProperty("pagination");
+  expect(res.body).toHaveProperty("sort");
 });
 
 it("POST /api/persona -> crea", async () => {
@@ -25,10 +27,9 @@ it("POST /api/persona -> crea", async () => {
     apellidos: "Usuario",
     rut: "99.999.999-9",
     fecha_nacimiento: "2025-01-01",
-    email: "test.user@example.com"
-
+    email: `test.user@example.com`
   };
-  const res = await request(app).post("/api/persona/").send(payload);
+  const res = await request(app).post("/api/persona").send(payload);
   expect(res.status).toBe(201);
   expect(res.body).toHaveProperty("id");
   createdId = res.body.id;
@@ -41,7 +42,7 @@ it("GET /api/persona/:id -> obtiene creada", async () => {
   expect(res.body).toHaveProperty("nombre");
 });
 
-it("GET /api/persona/:id -> actualiza", async () => {
+it("PUT /api/persona/:id -> actualiza", async () => {
   const res = await request(app).put(`/api/persona/${createdId}`).send({
     direccion: "Santiago",
   });
