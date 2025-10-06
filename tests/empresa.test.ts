@@ -1,7 +1,7 @@
 import request from "supertest";
 import { app } from "../src/app";
 import { pool } from "../src/db";
-import { resetDb } from "./setup";  // función que resetea schema + seeds
+import { resetDb } from "./setup";
 
 let createdId: string;
 

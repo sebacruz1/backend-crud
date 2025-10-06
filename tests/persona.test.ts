@@ -13,12 +13,34 @@ afterAll(async () => {
   await pool.end();
 });
 
-it("GET /api/persona -> lista paginada", async () => {
+it("GET /api/persona -> devuelve lista paginada con estructura esperada", async () => {
   const res = await request(app).get("/api/persona");
+
   expect(res.status).toBe(200);
+  expect(res.body).toHaveProperty("data");
   expect(Array.isArray(res.body.data)).toBe(true);
   expect(res.body).toHaveProperty("pagination");
+  expect(res.body.pagination).toHaveProperty("limit");
+  expect(res.body.pagination).toHaveProperty("offset");
   expect(res.body).toHaveProperty("sort");
+});
+
+it("GET /api/persona?orderBy=nombre&dir=ASC -> ordena correctamente", async () => {
+  const res = await request(app).get("/api/persona?orderBy=nombre&dir=ASC");
+
+  expect(res.status).toBe(200);
+  const nombres = res.body.data.map((p: any) => p.nombre);
+  const sorted = [...nombres].sort();
+  expect(nombres).toEqual(sorted);
+});
+
+it("GET /api/persona?limit=2&offset=1 -> aplica paginación", async () => {
+  const res = await request(app).get("/api/persona?limit=2&offset=1");
+
+  expect(res.status).toBe(200);
+  expect(res.body.data.length).toBeLessThanOrEqual(2);
+  expect(res.body.pagination.limit).toBe(2);
+  expect(res.body.pagination.offset).toBe(1);
 });
 
 it("POST /api/persona -> crea", async () => {

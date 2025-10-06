@@ -36,18 +36,22 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
     });
 
     const sql = `
-      SELECT BIN_TO_UUID(p.id,1) AS id, p.nombre, p.apellidos, p.rut, p.direccion,
-             p.celular, p.email, p.fecha_nacimiento, p.fecha_creacion, p.actualizacion
+      SELECT
+        BIN_TO_UUID(p.id,1) AS id,
+        p.nombre, p.apellidos, p.rut, p.direccion,
+        p.celular, p.email, p.fecha_nacimiento,
+        p.fecha_creacion, p.actualizacion
       FROM persona p
       ORDER BY ${orderBy} ${dir}
-      LIMIT ? OFFSET ?
+      LIMIT ${limit} OFFSET ${offset}
     `;
 
-    const [rows] = await pool.execute(sql, [limit, offset]);
+    const [rows] = await pool.query(sql);
     res.json({ data: rows, pagination: { limit, offset }, sort: { orderBy, dir } });
-  } catch (e) { next(e); }
+  } catch (e) {
+    next(e);
+  }
 });
-
 router.get("/:id", async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
   try {
     const [rows] = await pool.execute(
