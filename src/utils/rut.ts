@@ -1,5 +1,5 @@
 export function normalizarRut(rut: string): string {
-  if (!rut) return rut;
+  if (!rut) throw new Error("RUT vacío");
 
   let limpio = rut.replace(/\./g, "").replace(/\s+/g, "").toUpperCase();
 
@@ -10,12 +10,20 @@ export function normalizarRut(rut: string): string {
   if ((limpio.match(/-/g) || []).length > 1) {
     throw new Error("RUT con formato incorrecto");
   }
+
+  let cuerpo: string;
+  let dv: string;
+
   if (limpio.includes("-")) {
-    const [cuerpo, dv] = limpio.split("-");
-    return `${cuerpo}-${dv}`;
+    [cuerpo, dv] = limpio.split("-");
+  } else {
+    cuerpo = limpio.slice(0, -1);
+    dv = limpio.slice(-1);
   }
 
-  const cuerpo = limpio.slice(0, -1);
-  const dv = limpio.slice(-1);
+  if (!/^\d+$/.test(cuerpo) || !/^[0-9K]$/.test(dv)) {
+    throw new Error("Formato de RUT inválido");
+  }
+
   return `${cuerpo}-${dv}`;
 }
