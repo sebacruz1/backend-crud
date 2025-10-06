@@ -47,15 +47,6 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
-      - name: Creacion db y seeds
-        env:
-          MYSQL_PWD: root
-        run: |
-          until mysql -h 127.0.0.1 -uroot -e "SELECT 1"; do sleep 1; done
-          mysql -h 127.0.0.1 -uroot -e "CREATE DATABASE IF NOT EXISTS crud_test"
-          mysql -h 127.0.0.1 -uroot crud_test < db/init/schema.sql
-          mysql -h 127.0.0.1 -uroot crud_test < db/init/seeds.sql
-
       - name: Lint
         run: npm run lint --if-present
 

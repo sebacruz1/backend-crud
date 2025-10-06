@@ -204,10 +204,10 @@ router.get("/:id/empresas", async (req, res, next) => {
       WHERE pe.persona_id = UUID_TO_BIN(?,1)
         ${whereExtra}
       ORDER BY pe.es_actual DESC, pe.fecha_inicio DESC
-      LIMIT ? OFFSET ?
+      LIMIT ?, ?
     `;
-
-    const [rows] = await pool.execute(sql, [personaId, limit, offset]);
+    const params = [personaId, offset, limit];
+    const [rows] = await pool.query(sql, params);
     res.json({ data: rows, limit, offset });
   } catch (e) { next(e); }
 });

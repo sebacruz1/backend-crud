@@ -1,17 +1,12 @@
 import request from "supertest";
 import { app } from "../src/app";
 import { pool } from "../src/db";
-import { resetDb } from "./setup";
 
 let personaId: string;
 let empresaActualId: string;
 let empresaPasadaId: string;
 let relacionActualId: string;
 let relacionPasadaId: string;
-
-beforeAll(async () => {
-  await resetDb();
-});
 
 afterAll(async () => {
   await pool.end();
