@@ -1,6 +1,8 @@
 import { Router, Request, Response, NextFunction } from "express";
-import { pool } from "../db";
 import { z } from "zod";
+import { pool } from "../db";
+import { parseListParams } from "../utils/paginacion";
+import { normalizarRut } from "../utils/rut";
 
 const router = Router();
 
@@ -16,21 +18,36 @@ const empresaActualizar = empresaCrear.partial();
 
 const isDup = (e: any) => e?.code === "ER_DUP_ENTRY" || e?.errno === 1062;
 
-router.get("/", async (_req: Request, res: Response, next: NextFunction) => {
+router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const [rows] = await pool.query(
-      `SELECT BIN_TO_UUID(id,1) AS id, nombre, rut, direccion, celular, email,
-      fecha_creacion, actualizacion
-      FROM empresa
-      ORDER BY fecha_creacion DESC`
-    );
-    res.json(rows);
+    const { orderBy, dir, limit, offset } = parseListParams(req.query, {
+      allowedSort: {
+        nombre: "e.nombre",
+        rut: "e.rut",
+        fecha_creacion: "e.fecha_creacion",
+      },
+      defaultSort: "fecha_creacion",
+      defaultDir: "DESC",
+      maxLimit: 100,
+      defaultLimit: 20,
+    });
+
+    const sql = `
+      SELECT BIN_TO_UUID(e.id,1) AS id, e.nombre, e.rut, e.direccion, e.celular, e.email,
+             e.fecha_creacion, e.actualizacion
+      FROM empresa e
+      ORDER BY ${orderBy} ${dir}
+      LIMIT ? OFFSET ?
+    `;
+
+    const [rows] = await pool.execute(sql, [limit, offset]);
+    res.json({ data: rows, pagination: { limit, offset }, sort: { orderBy, dir } });
   } catch (e) { next(e); }
 });
 
 router.get("/:id", async (req, res, next) => {
   try {
-    const [rows] = await pool.query(
+    const [rows] = await pool.execute(
       `SELECT BIN_TO_UUID(id,1) AS id, nombre, rut, direccion, celular, email,
               fecha_creacion, actualizacion
        FROM empresa
@@ -47,26 +64,34 @@ router.post("/", async (req, res, next) => {
   try {
     const data = empresaCrear.parse(req.body);
 
-    await pool.query(
+    let rutNorm: string;
+    try {
+      rutNorm = normalizarRut(data.rut);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "RUT inválido";
+      return res.status(400).json({ error: msg });
+    }
+
+    await pool.execute(
       `INSERT INTO empresa (nombre, rut, direccion, celular, email)
        VALUES (?, ?, ?, ?, ?)`,
       [
         data.nombre,
-        data.rut,
+        rutNorm,
         data.direccion ?? null,
         data.celular ?? null,
         data.email ?? null,
       ]
     );
 
-    const [rows] = await pool.query(
+    const [rows] = await pool.execute(
       `SELECT BIN_TO_UUID(id,1) AS id, nombre, rut, direccion, celular, email,
               fecha_creacion, actualizacion
        FROM empresa
        WHERE rut = ?
        ORDER BY fecha_creacion DESC
        LIMIT 1`,
-      [data.rut]
+      [rutNorm]
     );
     const arr = rows as any[];
     res.status(201).json(arr[0]);
@@ -81,7 +106,17 @@ router.put("/:id", async (req, res, next) => {
   try {
     const data = empresaActualizar.parse(req.body);
 
-    const [result]: any = await pool.query(
+    let rutNorm: string | null = null;
+    if (data.rut) {
+      try {
+        rutNorm = normalizarRut(data.rut);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "RUT inválido";
+        return res.status(400).json({ error: msg });
+      }
+    }
+
+    const [result]: any = await pool.execute(
       `UPDATE empresa SET
          nombre = COALESCE(?, nombre),
          rut = COALESCE(?, rut),
@@ -91,7 +126,7 @@ router.put("/:id", async (req, res, next) => {
        WHERE id = UUID_TO_BIN(?,1)`,
       [
         data.nombre ?? null,
-        data.rut ?? null,
+        rutNorm ?? null,
         data.direccion ?? null,
         data.celular ?? null,
         data.email ?? null,
@@ -101,7 +136,7 @@ router.put("/:id", async (req, res, next) => {
 
     if (!result || result.affectedRows === 0) return res.status(404).json({ error: "No encontrado" });
 
-    const [rows] = await pool.query(
+    const [rows] = await pool.execute(
       `SELECT BIN_TO_UUID(id,1) AS id, nombre, rut, direccion, celular, email,
               fecha_creacion, actualizacion
        FROM empresa
@@ -120,7 +155,7 @@ router.put("/:id", async (req, res, next) => {
 
 router.delete("/:id", async (req, res, next) => {
   try {
-    const [result]: any = await pool.query(
+    const [result]: any = await pool.execute(
       `DELETE FROM empresa WHERE id = UUID_TO_BIN(?,1)`,
       [req.params.id]
     );
