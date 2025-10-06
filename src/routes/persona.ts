@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { pool } from "../db";
 import { normalizarRut } from "../utils/rut";
+import { parseListParams } from "../utils/paginacion";
 
 const router = Router();
 
@@ -19,15 +20,31 @@ const personaActualizar = personaCrear.partial();
 
 const isDup = (e: any) => e?.code === "ER_DUP_ENTRY" || e?.errno === 1062;
 
-router.get("/", async (_req: Request, res: Response, next: NextFunction) => {
+router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const [rows] = await pool.execute(
-      `SELECT BIN_TO_UUID(id,1) AS id, nombre, apellidos, rut, direccion, celular, email,
-              fecha_nacimiento, fecha_creacion, actualizacion
-       FROM persona
-       ORDER BY fecha_creacion DESC`
-    );
-    res.json(rows);
+    const { orderBy, dir, limit, offset } = parseListParams(req.query, {
+      allowedSort: {
+        nombre: "p.nombre",
+        apellidos: "p.apellidos",
+        rut: "p.rut",
+        fecha_creacion: "p.fecha_creacion",
+      },
+      defaultSort: "fecha_creacion",
+      defaultDir: "DESC",
+      maxLimit: 100,
+      defaultLimit: 20,
+    });
+
+    const sql = `
+      SELECT BIN_TO_UUID(p.id,1) AS id, p.nombre, p.apellidos, p.rut, p.direccion,
+             p.celular, p.email, p.fecha_nacimiento, p.fecha_creacion, p.actualizacion
+      FROM persona p
+      ORDER BY ${orderBy} ${dir}
+      LIMIT ? OFFSET ?
+    `;
+
+    const [rows] = await pool.execute(sql, [limit, offset]);
+    res.json({ data: rows, pagination: { limit, offset }, sort: { orderBy, dir } });
   } catch (e) { next(e); }
 });
 
@@ -50,13 +67,21 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = personaCrear.parse(req.body);
 
+    let rutNorm: string;
+    try {
+      rutNorm = normalizarRut(data.rut);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "RUT inválido";
+      return res.status(400).json({ error: msg });
+    }
+
     await pool.execute(
       `INSERT INTO persona (nombre, apellidos, rut, direccion, celular, email, fecha_nacimiento)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         data.nombre,
         data.apellidos,
-        data.rut,
+        rutNorm,
         data.direccion ?? null,
         data.celular ?? null,
         data.email ?? null,
@@ -71,7 +96,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
        WHERE rut = ?
        ORDER BY fecha_creacion DESC
        LIMIT 1`,
-      [data.rut]
+      [rutNorm]
     );
     const arr = rows as any[];
     res.status(201).json(arr[0]);
@@ -86,6 +111,16 @@ router.put("/:id", async (req: Request<{ id: string }>, res: Response, next: Nex
   try {
     const data = personaActualizar.parse(req.body);
 
+    let rutNorm: string | null = null;
+    if (data.rut) {
+      try {
+        rutNorm = normalizarRut(data.rut);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "RUT inválido";
+        return res.status(400).json({ error: msg });
+      }
+    }
+
     const [result]: any = await pool.execute(
       `UPDATE persona SET
          nombre = COALESCE(?, nombre),
@@ -99,7 +134,7 @@ router.put("/:id", async (req: Request<{ id: string }>, res: Response, next: Nex
       [
         data.nombre ?? null,
         data.apellidos ?? null,
-        data.rut ?? null,
+        rutNorm ?? null,
         data.direccion ?? null,
         data.celular ?? null,
         data.email ?? null,
@@ -165,13 +200,12 @@ router.get("/:id/empresas", async (req, res, next) => {
       WHERE pe.persona_id = UUID_TO_BIN(?,1)
         ${whereExtra}
       ORDER BY pe.es_actual DESC, pe.fecha_inicio DESC
-      LIMIT ${limit} OFFSET ${offset}
+      LIMIT ? OFFSET ?
     `;
 
-    const [rows] = await pool.execute(sql, [personaId]);
+    const [rows] = await pool.execute(sql, [personaId, limit, offset]);
     res.json({ data: rows, limit, offset });
-  } catch (e) {
-    next(e);
-  }
+  } catch (e) { next(e); }
 });
+
 export default router;
