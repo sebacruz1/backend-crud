@@ -13,10 +13,15 @@ afterAll(async () => {
   await pool.end();
 });
 
-it("GET /api/empresa -> lista", async () => {
+it("GET /api/empresa -> lista con estructura esperada", async () => {
   const res = await request(app).get("/api/empresa");
   expect(res.status).toBe(200);
-  expect(Array.isArray(res.body)).toBe(true);
+  expect(res.body).toHaveProperty("data");
+  expect(Array.isArray(res.body.data)).toBe(true);
+  expect(res.body).toHaveProperty("pagination");
+  expect(res.body.pagination).toHaveProperty("limit");
+  expect(res.body.pagination).toHaveProperty("offset");
+  expect(res.body).toHaveProperty("sort");
 });
 
 it("POST /api/empresa -> crea", async () => {

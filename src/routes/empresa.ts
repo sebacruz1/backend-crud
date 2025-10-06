@@ -33,11 +33,17 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
     });
 
     const sql = `
-      SELECT BIN_TO_UUID(e.id,1) AS id, e.nombre, e.rut, e.direccion, e.celular, e.email,
-             e.fecha_creacion, e.actualizacion
+      SELECT BIN_TO_UUID(e.id,1) AS id,
+      e.nombre,
+      e.rut,
+      e.direccion,
+      e.celular,
+      e.email,
+      e.fecha_creacion,
+      e.actualizacion
       FROM empresa e
       ORDER BY ${orderBy} ${dir}
-      LIMIT ? OFFSET ?
+      LIMIT ${limit} OFFSET ${offset}
     `;
 
     const [rows] = await pool.execute(sql, [limit, offset]);
