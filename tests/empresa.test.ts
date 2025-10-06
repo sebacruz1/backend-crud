@@ -24,6 +24,15 @@ it("GET /api/empresa -> lista con estructura esperada", async () => {
   expect(res.body).toHaveProperty("sort");
 });
 
+it("GET /api/empresa?orderBy=nombre&dir=ASC -> ordena correctamente", async () => {
+  const res = await request(app).get("/api/empresa?orderBy=nombre&dir=ASC");
+
+  expect(res.status).toBe(200);
+  const nombres = res.body.data.map((p: any) => p.nombre);
+  const sorted = [...nombres].sort();
+  expect(nombres).toEqual(sorted);
+});
+
 it("POST /api/empresa -> crea", async () => {
   const payload = {
     nombre: "Empresa Test",
