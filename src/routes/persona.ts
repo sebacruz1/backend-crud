@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
-import { pool } from "../db";
 import { z } from "zod";
+import { pool } from "../db";
+import { normalizarRut } from "../utils/rut";
 
 const router = Router();
 

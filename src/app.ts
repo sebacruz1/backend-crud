@@ -3,7 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import { ping } from "./db";
 import { config } from "./config";
-import { requestId } from "./middlewares/resquestId";
+import { requestId } from "./middlewares/requestId";
 
 import personaRouter from "./routes/persona";
 import empresaRouter from "./routes/empresa";
@@ -33,7 +33,7 @@ app.use((req: Request, res: Response) => {
   res.status(404).json({ error: `Ruta no encontrada: ${req.method} ${req.path}`, requestId: req.id });
 });
 
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
   console.error("[ERROR]", err);
   res.status(err.status || 500).json({ error: err.message || "Internal Server Error", requestId: req.id });
 });
