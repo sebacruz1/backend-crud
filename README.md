@@ -68,6 +68,7 @@ Crea un archivo `.env` en la raíz con las variables:
 NODE_ENV=development
 PORT=3000
 DATABASE_URL=mysql://root:root@127.0.0.1:3306/crud
+```
 
 # Docker (usado por docker-compose)
 Reemplaza tus creedenciales en el .env.example y cambiale el nombre a .env
