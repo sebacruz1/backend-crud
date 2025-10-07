@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "dotenv -e .env.local -- nodemon src/server.ts",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "tsc",
@@ -37,6 +37,7 @@
     "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
     "@typescript-eslint/parser": "^8.45.0",
+    "dotenv-cli": "^10.0.0",
     "eslint": "^9.36.0",
     "supertest": "^7.1.4",
     "tsx": "^4.20.5",

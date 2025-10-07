@@ -71,7 +71,7 @@ DATABASE_URL=mysql://root:root@127.0.0.1:3306/crud
 ```
 
 # Docker (usado por docker-compose)
-Reemplaza tus creedenciales en el .env.example y cambiale el nombre a .env
+Reemplaza tus creedenciales en el .env.example y cambiale el nombre a .env.docker
 
 ## Uso con Docker
 
