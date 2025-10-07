@@ -7,7 +7,6 @@ if (!process.env.DATABASE_URL) {
 
 export const pool = mysql.createPool(process.env.DATABASE_URL);
 
-// fila tipada para el ping
 interface PingRow extends RowDataPacket {
   result: number;
 }

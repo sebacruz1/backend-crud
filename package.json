@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "dev": "dotenv -e .env.local -- nodemon src/server.ts",
+    "dev": "dotenv -e .env.local -- tsx watch src/server.ts",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "tsc",
@@ -24,7 +24,7 @@
   "homepage": "https://github.com/sebacruz1/backend-crud#readme",
   "dependencies": {
     "cors": "^2.8.5",
-    "dotenv": "^17.2.2",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
     "mysql2": "^3.15.1",
