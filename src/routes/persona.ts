@@ -197,9 +197,13 @@ router.get("/:id/empresas", async (req, res, next) => {
         BIN_TO_UUID(pe.id,1)   AS relacion_id,
         BIN_TO_UUID(e.id,1)    AS empresa_id,
         e.nombre               AS empresa,
+        BIN_TO_UUID(p.id,1)    AS persona_id,
+        p.nombre               AS persona_nombre,
+        p.apellidos            AS persona_apellidos,
         pe.cargo, pe.area,
         pe.fecha_inicio, pe.fecha_fin, pe.es_actual
       FROM persona_empresa pe
+      JOIN persona p ON p.id = pe.persona_id
       JOIN empresa e ON e.id = pe.empresa_id
       WHERE pe.persona_id = UUID_TO_BIN(?,1)
         ${whereExtra}

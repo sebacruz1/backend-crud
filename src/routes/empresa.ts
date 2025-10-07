@@ -51,6 +51,57 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   } catch (e) { next(e); }
 });
 
+router.get("/:id/personas", async (req, res, next) => {
+  try {
+    const actual = typeof req.query.actual === "string" ? req.query.undfined : undefined;
+    const whereExtra =
+      actual === "true" ? "AND pe.es_actual = 1" :
+      actual === "false" ? "AND pe.es_actual = 0" : "";
+    const { orderBy, dir, limit, offset } = parseListParams(req.query, {
+      allowedSort: {
+        fecha_inicio: "pe.fecha_inicio",
+        fecha_fin: "pe.fecha_fin",
+        es_actual: "pe.es_actual",
+        nombre: "p.nombre",
+        apellidos: "p.apellidos"
+      },
+      defaultSort: "fecha_inicio",
+      defaultDir: "DESC",
+      maxLimit: 100,
+      defaultLimit: 20,
+    });
+
+    const lim = Math.min(Math.max(Number(limit) || 20, 0), 100);
+    const off = Math.max(Number(offset) || 0, 0);
+
+    const sql = `
+     SELECT
+        BIN_TO_UUID(pe.id,1) AS relacion_id,
+        BIN_TO_UUID(p.id,1)  AS persona_id,
+        p.nombre, p.apellidos, p.rut,
+        pe.cargo, pe.area,
+        pe.fecha_inicio, pe.fecha_fin, pe.es_actual
+      FROM persona_empresa pe
+      JOIN persona p ON p.id = pe.persona_id
+      WHERE pe.empresa_id = UUID_TO_BIN(?,1)
+        ${whereExtra}
+      ORDER BY ${orderBy} ${dir}
+      LIMIT ${off}, ${lim}
+    `;
+
+    const [rows] = await pool.query(sql, [req.params.id]);
+
+    res.json({
+      data: rows,
+      pagination: { limit, offset },
+      sort: { orderBy, dir },
+      filter: {actual: actual ?? null },
+    });
+
+  } catch (e) { next(e) };
+
+});
+
 router.get("/:id", async (req, res, next) => {
   try {
     const [rows] = await pool.execute(
