@@ -1,6 +1,7 @@
 import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
+import rateLimit from "express-rate-limit"
 import { ping } from "./db";
 import { config } from "./config";
 import { requestId } from "./middlewares/requestId";
@@ -11,10 +12,19 @@ import personaEmpresaRouter from "./routes/persona-empresa";
 
 export const app = express();
 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: "Too Many Requests",
+  statusCode: 429,
+  },
+});
+
 app.use(requestId);
 app.use(helmet(config.helmet));
 app.use(cors({ origin: config.corsOrigin, credentials: true }));
 app.use(express.json());
+app.use("/api/", limiter);
 
 app.get("/health", async (_req, res) => {
   try {
