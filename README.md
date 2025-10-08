@@ -157,6 +157,7 @@ El workflow (`.github/workflows/ci.yml`) ejecuta los siguientes pasos:
 | GET | `/api/persona/:id/empresas` | Lista empleos actuales y pasados |
 | POST | `/api/empresa` | Crea una empresa |
 | GET | `/api/empresa` | Lista empresas |
+| GET | `/api/empresa/:id/personas` | Lista personas dentro de la empresa |
 | POST | `/api/persona-empresa` | Crea relación persona-empresa |
 | DELETE | `/api/persona-empresa/:id` | Elimina relación persona-empresa |
 
