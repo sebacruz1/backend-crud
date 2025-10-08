@@ -40,8 +40,12 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
       e.celular,
       e.email,
       e.fecha_creacion,
-      e.actualizacion
+      e.actualizacion,
+      COUNT(CASE WHEN pe.es_actual = 1 THEN 1 END) AS empleados_actuales
       FROM empresa e
+      LEFT JOIN persona_empresa pe
+        ON pe.empresa_id = e.id
+      GROUP BY e.id
       ORDER BY ${orderBy} ${dir}
       LIMIT ${limit} OFFSET ${offset}
     `;
@@ -104,13 +108,28 @@ router.get("/:id/personas", async (req, res, next) => {
 
 router.get("/:id", async (req, res, next) => {
   try {
-    const [rows] = await pool.execute(
-      `SELECT BIN_TO_UUID(id,1) AS id, nombre, rut, direccion, celular, email,
-              fecha_creacion, actualizacion
-       FROM empresa
-       WHERE id = UUID_TO_BIN(?,1)`,
-      [req.params.id]
-    );
+
+    const sql = `
+        SELECT
+          BIN_TO_UUID(e.id,1) AS id,
+          e.nombre,
+          e.rut,
+          e.direccion,
+          e.celular,
+          e.email,
+          e.fecha_creacion,
+          e.actualizacion,
+          COUNT(CASE WHEN pe.es_actual = 1 THEN 1 END) as empleados_actuales
+
+        FROM empresa e
+        LEFT JOIN persona_empresa pe
+          ON pe.empresa_id = e.id
+        WHERE e.id = UUID_TO_BIN(?,1)
+        GROUP BY e.id;
+        `;
+
+
+    const [rows] = await pool.execute(sql, [req.params.id]);
     const arr = rows as any[];
     if (!arr[0]) return res.status(404).json({ error: "No encontrado" });
     res.json(arr[0]);
