@@ -37,6 +37,32 @@ it("GET /api/empresa?limit=2&offset=1 -> aplica paginación", async () => {
   expect(res.body.pagination.offset).toBe(1);
 });
 
+it("GET /api/empresa/:id/personas -> Muestra personas trabajando en la empresa", async () => {
+
+  const empresaId = "22a11111-aaaa-b001-81ac-682ca2a761f0";
+
+  const res = await request(app).get(`/api/empresa/${empresaId}/personas`);
+  expect(res.status).toBe(200);
+  expect(Array.isArray(res.body.data)).toBe(true);
+  expect(res.body.data[0]).toHaveProperty("persona_id");
+  expect(res.body.data[0]).toHaveProperty("nombre");
+  expect(res.body.data[0]).toHaveProperty("apellidos");
+  expect(res.body.data[0]).toHaveProperty("cargo");
+
+});
+
+it("GET /api/empresa/:id/personas?actual=true -> Muestra personas trabajando actualmente en la empresa", async () => {
+
+  const empresaId = "22a11111-aaaa-b001-81ac-682ca2a761f0";
+
+  const res = await request(app).get(`/api/empresa/${empresaId}/personas?actual=true`);
+
+  expect(res.status).toBe(200);
+  for (const p of res.body.data) {
+    expect(p.es_actual === 1 || p.es_actual === true).toBe(true);
+  }
+});
+
 it("POST /api/empresa -> crea", async () => {
   const payload = {
     nombre: "Empresa Test",
