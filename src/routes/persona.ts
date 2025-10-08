@@ -20,20 +20,30 @@ const personaActualizar = personaCrear.partial();
 
 const isDup = (e: any) => e?.code === "ER_DUP_ENTRY" || e?.errno === 1062;
 
-router.get("/", async (req: Request, res: Response, next: NextFunction) => {
+router.get("/", async (req, res, next) => {
   try {
     const { orderBy, dir, limit, offset } = parseListParams(req.query, {
-      allowedSort: {
-        nombre: "p.nombre",
-        apellidos: "p.apellidos",
-        rut: "p.rut",
-        fecha_creacion: "p.fecha_creacion",
-      },
-      defaultSort: "fecha_creacion",
-      defaultDir: "DESC",
-      maxLimit: 100,
-      defaultLimit: 20,
+      allowedSort: { nombre: "p.nombre", apellidos: "p.apellidos", rut: "p.rut", fecha_creacion: "p.fecha_creacion" },
+      defaultSort: "fecha_creacion", defaultDir: "DESC", maxLimit: 100, defaultLimit: 20,
     });
+
+    const filters = {
+      nombre: (req.query.nombre as string | undefined)?.trim(),
+      apellidos: (req.query.apellidos as string | undefined)?.trim(),
+      rut: (req.query.rut as string | undefined)?.trim(),
+      email: (req.query.email as string | undefined)?.trim(),
+      celular: (req.query.celular as string | undefined)?.trim(),
+      direccion: (req.query.direccion as string | undefined)?.trim(),
+    };
+
+    const where: string[] = [];
+    const params: any[] = [];
+    for (const [key, val] of Object.entries(filters)) {
+      if (!val) continue;
+      where.push("?? LIKE ?");
+      params.push(`p.${key}`, `%${val}%`);
+    }
+    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
 
     const sql = `
       SELECT
@@ -50,16 +60,17 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
       FROM persona p
       JOIN persona_empresa pe
         on pe.persona_id = p.id
+      ${whereSql}
       ORDER BY ${orderBy} ${dir}
       LIMIT ${limit} OFFSET ${offset}
     `;
+    params.push(limit, offset);
 
-    const [rows] = await pool.query(sql);
-    res.json({ data: rows, pagination: { limit, offset }, sort: { orderBy, dir } });
-  } catch (e) {
-    next(e);
-  }
+    const [rows] = await pool.query(sql, params);
+    res.json({ data: rows, pagination: { limit, offset }, sort: { orderBy, dir }, filters });
+  } catch (e) { next(e); }
 });
+
 router.get("/:id", async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
   try {
     const [rows] = await pool.execute(
