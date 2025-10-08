@@ -38,10 +38,18 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
     const sql = `
       SELECT
         BIN_TO_UUID(p.id,1) AS id,
-        p.nombre, p.apellidos, p.rut, p.direccion,
-        p.celular, p.email, p.fecha_nacimiento,
-        p.fecha_creacion, p.actualizacion
+        p.nombre,
+        p.apellidos,
+        p.rut,
+        p.direccion,
+        p.celular, p.email,
+        p.fecha_nacimiento,
+        p.fecha_creacion,
+        pe.es_actual as tiene_trabajo,
+        p.actualizacion
       FROM persona p
+      JOIN persona_empresa pe
+        on pe.persona_id = p.id
       ORDER BY ${orderBy} ${dir}
       LIMIT ${limit} OFFSET ${offset}
     `;
