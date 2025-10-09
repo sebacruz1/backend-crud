@@ -23,8 +23,16 @@ const isDup = (e: any) => e?.code === "ER_DUP_ENTRY" || e?.errno === 1062;
 router.get("/", async (req, res, next) => {
   try {
     const { orderBy, dir, limit, offset } = parseListParams(req.query, {
-      allowedSort: { nombre: "p.nombre", apellidos: "p.apellidos", rut: "p.rut", fecha_creacion: "p.fecha_creacion" },
-      defaultSort: "fecha_creacion", defaultDir: "DESC", maxLimit: 100, defaultLimit: 20,
+      allowedSort: {
+        nombre: "p.nombre",
+        apellidos: "p.apellidos",
+        rut: "p.rut",
+        fecha_creacion: "p.fecha_creacion",
+      },
+      defaultSort: "fecha_creacion",
+      defaultDir: "DESC",
+      maxLimit: 100,
+      defaultLimit: 20,
     });
 
     const filters = {
@@ -40,30 +48,28 @@ router.get("/", async (req, res, next) => {
     const params: any[] = [];
     for (const [key, val] of Object.entries(filters)) {
       if (!val) continue;
-      where.push("?? LIKE ?");
-      params.push(`p.${key}`, `%${val}%`);
+      where.push(`p.${key} LIKE ?`);
+      params.push(`%${val}%`);
     }
     const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
 
     const sql = `
       SELECT
         BIN_TO_UUID(p.id,1) AS id,
-        p.nombre,
-        p.apellidos,
-        p.rut,
-        p.direccion,
-        p.celular, p.email,
-        p.fecha_nacimiento,
-        p.fecha_creacion,
-        pe.es_actual as tiene_trabajo,
-        p.actualizacion
+        p.nombre, p.apellidos, p.rut, p.direccion,
+        p.celular, p.email, p.fecha_nacimiento,
+        p.fecha_creacion, p.actualizacion,
+        COUNT(pe.id)                           AS empleos_totales,
+        MAX(pe.es_actual = 1)                  AS tiene_trabajo_actual
       FROM persona p
-      JOIN persona_empresa pe
-        on pe.persona_id = p.id
+      LEFT JOIN persona_empresa pe
+        ON pe.persona_id = p.id
       ${whereSql}
+      GROUP BY p.id
       ORDER BY ${orderBy} ${dir}
-      LIMIT ${limit} OFFSET ${offset}
+      LIMIT ? OFFSET ?;
     `;
+
     params.push(limit, offset);
 
     const [rows] = await pool.query(sql, params);
