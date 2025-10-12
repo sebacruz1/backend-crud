@@ -51,6 +51,7 @@ router.get("/", async (req, res, next) => {
       where.push(`p.${key} LIKE ?`);
       params.push(`%${val}%`);
     }
+
     const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
 
     const sql = `

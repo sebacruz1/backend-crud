@@ -32,6 +32,24 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
       defaultLimit: 20,
     });
 
+    const filters = {
+      nombre: (req.query.nombre as string | undefined)?.trim(),
+      rut: (req.query.rut as string | undefined)?.trim(),
+      email: (req.query.email as string | undefined)?.trim(),
+      celular: (req.query.celular as string | undefined)?.trim(),
+      direccion: (req.query.direccion as string | undefined)?.trim(),
+    };
+
+    const where: string[] = [];
+    const params: any[] = [];
+    for (const [key, val] of Object.entries(filters)) {
+      if (!val) continue;
+      where.push(`e.${key} LIKE ?`);
+      params.push(`%${val}%`);
+    }
+
+    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+
     const sql = `
       SELECT BIN_TO_UUID(e.id,1) AS id,
       e.nombre,
@@ -45,13 +63,16 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
       FROM empresa e
       LEFT JOIN persona_empresa pe
         ON pe.empresa_id = e.id
+      ${whereSql}
       GROUP BY e.id
       ORDER BY ${orderBy} ${dir}
-      LIMIT ${limit} OFFSET ${offset}
+      LIMIT ? OFFSET ?;
     `;
 
-    const [rows] = await pool.execute(sql, [limit, offset]);
-    res.json({ data: rows, pagination: { limit, offset }, sort: { orderBy, dir } });
+    params.push(limit, offset)
+
+    const [rows] = await pool.query(sql, params);
+    res.json({ data: rows, pagination: { limit, offset }, sort: { orderBy, dir }, filters });
   } catch (e) { next(e); }
 });
 
