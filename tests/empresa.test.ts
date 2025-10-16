@@ -92,6 +92,42 @@ it("PUT /api/empresa/:id -> actualiza", async () => {
   expect(res.body).toHaveProperty("direccion", "Providencia");
 });
 
+it("GET /api/empresa?nombre=empresa%20test -> Busca el nombre Empresa Test", async () => {
+  const res = await request(app).get("/api/empresa?nombre=empresa%20test");
+  expect(res.status).toBe(200);
+  expect(Array.isArray(res.body.data)).toBe(true);
+
+  const hasName = res.body.data.some((e: any) =>
+    e.nombre.toLowerCase().includes("empresa test")
+  );
+  expect(hasName).toBe(true);
+});
+
+it("GET /api/empresa?rut=8888888 -> Busca el rut de la empresa creada", async () => {
+  const res = await request(app).get("/api/empresa?rut=8888888");
+  expect(res.status).toBe(200);
+  expect(Array.isArray(res.body.data)).toBe(true);
+
+  const hasRut = res.body.data.some((e: any) =>
+    e.rut.includes("88888888") && e.nombre === "Empresa Test"
+  );
+  expect(hasRut).toBe(true);
+
+});
+
+it("GET /api/empresa?email=empresa.test -> Busca mail de la empresa creada", async () => {
+  const res = await request(app).get("/api/empresa?mail=empresa.test");
+  expect(res.status).toBe(200);
+  expect(Array.isArray(res.body.data)).toBe(true);
+
+  const hasMail = res.body.data.some((e: any) =>
+    e.email.includes("empresa.test") && e.nombre === "Empresa Test"
+  );
+
+  expect(hasMail).toBe(true);
+
+});
+
 it("DELETE /api/empresa/:id -> elimina", async () => {
   const res = await request(app).delete(`/api/empresa/${createdId}`);
   expect(res.status).toBe(204);
